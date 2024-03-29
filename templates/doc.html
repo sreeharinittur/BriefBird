@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Summarizer</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color:purple;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+        }
+
+        .card {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #343a40;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .summary {
+            margin-top: 20px;
+        }
+        .upload-btn {
+    background-color: white;
+    color: black;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+}
+.download-btn {
+            background-color: purple;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card p-4">
+            <h1 class="display-4">Document Summarizer</h1>
+            <form method="post" action="/doc" enctype="multipart/form-data">
+                <div class="form-group" >
+                    <label for="file" >Upload Word Document:</label>
+                    <input type="file" id="file" name="file" accept=".docx,.pdf" class="upload-btn " required>
+                </div>
+                
+                &nbsp;&nbsp;&nbsp;&nbsp;<button type="submit" class="btn btn-primary mt-2">Summarize</button>
+            </form>
+            <div id="loadingIndicator" style="display: none;">
+                <p>Loading...</p>
+            </div>
+            {% if error_message %}
+    <div class="alert alert-danger mt-4" role="alert">
+        {{ error_message }}
+    </div>
+{% endif %}
+            {% if summary %}
+                <div class="summary mt-4">
+                    <h2>Summary:</h2>
+                    <p>{{ summary }}</p>
+                </div>
+                {% if rouge_scores %}
+                <div class="summary mt-4">
+                    <h2>STATISTICS:</h2>
+                    <p>Precision: {{ rouge_scores['rouge-1']['p'] }}</p>
+                    
+                    <p>F1-Score: {{ rouge_scores['rouge-1']['f'] }}</p>
+                    
+                </div>
+                {% endif %}
+                
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        function downloadSummary() {
+            // Simulate download animation
+            document.getElementById("loadingIndicator").style.display = "block";
+            setTimeout(function(){
+                document.getElementById("loadingIndicator").style.display = "none";
+                // Dummy download functionality, replace with actual download logic
+                // For demonstration purposes, redirecting to a dummy file
+                window.location.href = "path/to/downloaded/file.pdf";
+            }, 2000); // Simulated 2 seconds delay
+        }
+    </script>
+</body>
+</html>
