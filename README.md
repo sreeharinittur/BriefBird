@@ -1,2 +1,2 @@
 # BriefBird
-A text summarization web app.
+A text summarization web app built using BART model.
