@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha384-rNSDb6OFbQwKxtiGjG4KW67d4PloMz4ePTf4Ap4/DVFCFsvFNUc1wb02MK8irh7q" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: purple;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            padding: 30px;
+            background: #fff;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .input-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1px;
+            margin-bottom: 20px;
+            background-color: purple;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        textarea {
+            width: calc(100% - 20px);
+            height: 150px;
+            resize: none;
+            border: none;
+            outline: none;
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+
+        #lengthSlider {
+            width: calc(100% - 20px);
+            margin-bottom: 20px;
+            border: 2px solid black;
+            border-radius: 5px;
+        }
+
+        #selectedLength {
+            display: block;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        #summarizeBtn {
+            color: #fff;
+            font-size: 18px;
+            outline: none;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: #3e2093;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        #regenerateBtn{
+            color: #fff;
+            font-size: 18px;
+            outline: none;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: #3e2093;
+            cursor: pointer;
+            transition: all 0.3s ease;
+
+        }
+
+        #summarizeBtn:hover {
+            background-color: #2980b9;
+        }
+
+        .output-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f8f8f8;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow-y: auto; 
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        
+
+        #summary {
+          margin-top: 10px;
+          height: 1000px;
+        font-size: 16px;
+        overflow-y:scroll; /* Add this line for vertical scrolling */
+        max-height: 200px; /* Adjust max-height as needed */
+        border: 1px solid #ddd; /* Add a border to clearly indicate the scrollable area */
+        padding: 10px; /* Add padding for better appearance */
+        }
+
+        /* Media Queries */
+        @media only screen and (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            textarea {
+                width: calc(100% - 10px);
+            }
+        }
+        #regenerateBtn:disabled {
+    background-color: #ccc; 
+    cursor: not-allowed;
+    }
+    .highlight {
+    background-color: yellow;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <h1>briefbird</h1>
+        
+        <form action="/summarize" method="POST">
+            <div class="input-container">
+                <textarea name="text" id="inputText" placeholder="Enter your text here">{{ text }}</textarea>
+            </div>
+
+            <!-- Range Picker -->
+            <label for="lengthSlider">Select Summary Length (words):</label>
+            <input type="range" id="lengthSlider" name="length" min="100" max="150" step="1" value="125">
+            <span id="selectedLength">Selected Length: 125 words</span>
+
+            <button type="submit" id="summarizeBtn" onclick="enable()">Summarize</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <button type="button" id="regenerateBtn" onclick="regenerateSummary()">Regenerate</button>
+            
+        </form>
+        {% if error %}
+    <div style="color: red;">{{ error }}</div>
+    {% endif %}
+
+        {% if summary %}
+        <div class="output-container">
+            <h2>Summary</h2>
+            
+            <div id="summary" style="background-color: white;border: 2px solid black;">{{ summary }}</div>
+            <span onclick="copySummary()" style="cursor: pointer;">📋</span>
+            
+            <span onclick="readAloudSummary()" style="cursor: pointer;">🔊</span>
+
+            <i class="fas fa-copy" onclick="copySummary()" style="cursor: pointer;"></i>
+            <i class="fas fa-share" onclick="shareSummary()" style="cursor: pointer;"></i>
+
+
+            
+        </div>
+        
+        <!-- ROUGE Scores Section -->
+        <div id="rougeScores">
+            <h2>ROUGE Scores</h2>
+            <p>Precision: {{ rouge_precision }}</p>
+            <p>Recall: {{ rouge_recall }}</p>
+            <p>F1 Score: {{ rouge_f1 }}</p>
+        </div>
+        {% endif %}
+        
+
+        <a href="/about" style="text-decoration: none;color:purple;font-size: 20px;">Know us better!!</a>
+        <a href="/contact" style="text-decoration: none;color: purple;font-size: 20px;">Got any queries or tips?</a>
+        <a href="/doc" style="text-decoration: none;color:purple;font-size: 20px;">Upload your document</a>
+    </div>
+
+    <script >
+        // Update selected length dynamically
+        const lengthSlider = document.getElementById('lengthSlider');
+        const selectedLength = document.getElementById('selectedLength');
+
+        lengthSlider.addEventListener('input', () => {
+            selectedLength.textContent = `Selected Length: ${lengthSlider.value} words`;
+        });
+
+        function regenerateSummary() {
+            const text = document.getElementById('inputText').value;
+            const length = document.getElementById('lengthSlider').value;
+
+            fetch('/regenerate-summary', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text, length }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.summary) {
+                    document.getElementById('summary').innerText = data.summary;
+                } else {
+                    console.error('Error in regenerating summary');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function copySummary() {
+        var summaryElement = document.getElementById('summary');
+        var range = document.createRange();
+        range.selectNode(summaryElement);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        window.getSelection().removeAllRanges();
+        alert('Summary copied to clipboard!');
+    }
+
+    
+
+    var currentWordIndex = 0;
+var isSpeaking = false;
+var utterance = null;
+
+function readAloudSummary() {
+    var summaryElement = document.getElementById('summary');
+    var summaryText = summaryElement.innerText;
+    var words = summaryText.split(' ');
+
+    isSpeaking = true;
+
+    utterance = new SpeechSynthesisUtterance(summaryText);
+    utterance.lang = 'en-US';
+
+    speechSynthesis.speak(utterance);
+}
+
+
+
+
+    </script>
+    
+</body>
+</html>
