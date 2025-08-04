@@ -12,7 +12,7 @@ tokenizer = BartTokenizer.from_pretrained(model_name)
 model = BartForConditionalGeneration.from_pretrained(model_name)
 
 def count_words(text):
-    return len(text.split())
+    return len(text.split())//length
 
 def has_tables(docx_file):
     doc = Document(docx_file)
